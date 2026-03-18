@@ -17,6 +17,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "@types/micromatch": "^4.0.10",
+    "micromatch": "^4.0.8",
     "zod": "^4.3.6"
   }
 }
