@@ -1,0 +1,33 @@
+{
+  "name": "mcp-switchboard",
+  "version": "1.0.0",
+  "description": "A system for organizing and managing MCP (Model Context Protocol) Servers",
+  "main": "dist/daemon/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/daemon/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jodom988/mcp-switchboard.git"
+  },
+  "keywords": [],
+  "author": "Josh Majors",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Jodom988/mcp-switchboard/issues"
+  },
+  "homepage": "https://github.com/Jodom988/mcp-switchboard#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "micromatch": "^4.0.8",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/micromatch": "^4.0.10",
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2"
+  }
+}
