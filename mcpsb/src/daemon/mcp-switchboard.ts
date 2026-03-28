@@ -6,6 +6,8 @@ import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 import micromatch from 'micromatch';
 import * as z from 'zod/v4';
 
+import { SingletonBase, ServiceProvider } from '../common/service-provider';
+
 export namespace McpSwitchboardTools {
 	const toolSummary = z.object({
 		name: z.string(),
@@ -120,8 +122,12 @@ interface ServerEntry {
 	tools: Tool[];
 }
 
-export class McpSwitchboard {
+export class McpSwitchboard extends SingletonBase {
 	private servers = new Map<string, ServerEntry>();
+
+	constructor(sp: ServiceProvider) {
+		super(sp);
+	}
 
 	async addServer(name: string, url: string): Promise<void> {
 		const client = new Client({ name: `switchboard-client-${name}`, version: '1.0.0' });

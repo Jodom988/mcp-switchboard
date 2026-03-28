@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 
+import { SingletonBase, ServiceProvider } from '../common/service-provider';
 import { McpSwitchboard, McpSwitchboardTools } from './mcp-switchboard';
 
 const sendJson = (res: ServerResponse, statusCode: number, body: unknown) => {
@@ -14,11 +15,13 @@ const sendJsonRpcError = (res: ServerResponse, statusCode: number, message: stri
 	sendJson(res, statusCode, { jsonrpc: '2.0', error: { code: -32000, message }, id: null });
 };
 
-export class McpSwitchboardServer {
-	private switchboard = new McpSwitchboard();
+export class McpSwitchboardServer extends SingletonBase {
+	private readonly switchboard: McpSwitchboard;
 	private mcpServer: McpServer;
 
-	constructor() {
+	constructor(sp: ServiceProvider) {
+		super(sp);
+		this.switchboard = sp.resolveSingleton(McpSwitchboard);
 		this.mcpServer = this.buildMcpServer();
 	}
 
