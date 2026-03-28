@@ -36,16 +36,17 @@ export class McpSwitchboardServer extends SingletonBase {
 			'list_tools',
 			{
 				title: 'List Tools',
-				description: 'List all tools organized by namespace. Optionally filter to a single namespace.',
-				inputSchema: McpSwitchboardTools.listTools.input.shape
+				description:
+					'List all tools organized by namespace. Optionally filter to a single namespace.',
+				inputSchema: McpSwitchboardTools.listTools.input.shape,
 			},
 			async ({ namespace }) => {
 				const result = this.switchboard.list_tools({ namespace });
 				return {
 					content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-					structuredContent: result
+					structuredContent: result,
 				};
-			}
+			},
 		);
 
 		server.registerTool(
@@ -55,31 +56,32 @@ export class McpSwitchboardServer extends SingletonBase {
 				description:
 					'Search for tools using a glob pattern matched against "namespace.toolname". ' +
 					'Example: "myserver.*" matches all tools in myserver, "*.add" matches all tools named add.',
-				inputSchema: McpSwitchboardTools.searchTools.input.shape
+				inputSchema: McpSwitchboardTools.searchTools.input.shape,
 			},
 			async ({ query, max_results }) => {
 				const result = this.switchboard.search_tools({ query, max_results });
 				return {
 					content: [{ type: 'text', text: JSON.stringify(result) }],
-					structuredContent: { results: result }
+					structuredContent: { results: result },
 				};
-			}
+			},
 		);
 
 		server.registerTool(
 			'get_tool_info',
 			{
 				title: 'Get Tool Info',
-				description: 'Get full details for a specific tool, including its input and output schemas.',
-				inputSchema: McpSwitchboardTools.getToolInfo.input.shape
+				description:
+					'Get full details for a specific tool, including its input and output schemas.',
+				inputSchema: McpSwitchboardTools.getToolInfo.input.shape,
 			},
 			async ({ namespace, tool_name }) => {
 				const result = this.switchboard.get_tool_info({ namespace, tool_name });
 				return {
 					content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-					structuredContent: result
+					structuredContent: result,
 				};
-			}
+			},
 		);
 
 		server.registerTool(
@@ -87,15 +89,15 @@ export class McpSwitchboardServer extends SingletonBase {
 			{
 				title: 'Call Tool',
 				description: 'Call a tool in a given namespace with the provided arguments.',
-				inputSchema: McpSwitchboardTools.callTool.input.shape
+				inputSchema: McpSwitchboardTools.callTool.input.shape,
 			},
 			async ({ namespace, tool_name, args }) => {
 				const result = await this.switchboard.call_tool({ namespace, tool_name, args });
 				return {
 					content: result.content as { type: 'text'; text: string }[],
-					structuredContent: result.structuredContent as Record<string, unknown> | undefined
+					structuredContent: result.structuredContent as Record<string, unknown> | undefined,
 				};
-			}
+			},
 		);
 
 		server.registerTool(
@@ -109,22 +111,22 @@ export class McpSwitchboardServer extends SingletonBase {
 					'Use `console.log(...)` to write to stdout and `console.error(...)` to write to stderr — both are captured in the output. ' +
 					'The script runs as the body of an async function, so you can use `return` to provide a result value, ' +
 					'and `await` at the top level.',
-				inputSchema: McpSwitchboardTools.runJsScript.input.shape
+				inputSchema: McpSwitchboardTools.runJsScript.input.shape,
 			},
 			async ({ script, maxLen }) => {
 				const output = await this.switchboard.run_js_script({ script, maxLen });
 				return {
 					content: [{ type: 'text', text: JSON.stringify(output) }],
-					structuredContent: output
+					structuredContent: output,
 				};
-			}
+			},
 		);
 
 		return server;
 	}
 
 	start(port: number): Promise<void> {
-		return new Promise((resolve) => {
+		return new Promise(resolve => {
 			const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
 				const url = new URL(req.url ?? '/', `http://${req.headers.host ?? '127.0.0.1'}`);
 

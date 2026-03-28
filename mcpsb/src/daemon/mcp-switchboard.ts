@@ -11,7 +11,7 @@ import { SingletonBase, ServiceProvider } from '../common/service-provider';
 export namespace McpSwitchboardTools {
 	const toolSummary = z.object({
 		name: z.string(),
-		description: z.string()
+		description: z.string(),
 	});
 
 	const jsonSchema = z.record(z.string(), z.unknown());
@@ -21,14 +21,14 @@ export namespace McpSwitchboardTools {
 		title: z.string().optional(),
 		description: z.string().optional(),
 		inputSchema: jsonSchema,
-		outputSchema: jsonSchema.optional()
+		outputSchema: jsonSchema.optional(),
 	});
 
 	export const listTools = {
 		input: z.object({
-			namespace: z.string().optional()
+			namespace: z.string().optional(),
 		}),
-		output: z.record(z.string(), z.array(toolSummary))
+		output: z.record(z.string(), z.array(toolSummary)),
 	};
 	export type ListToolsInput = z.infer<typeof listTools.input>;
 	export type ListToolsOutput = z.infer<typeof listTools.output>;
@@ -36,15 +36,15 @@ export namespace McpSwitchboardTools {
 	export const searchTools = {
 		input: z.object({
 			query: z.string(),
-			max_results: z.number().int().positive().optional()
+			max_results: z.number().int().positive().optional(),
 		}),
 		output: z.array(
 			z.object({
 				namespace: z.string(),
 				name: z.string(),
-				description: z.string()
-			})
-		)
+				description: z.string(),
+			}),
+		),
 	};
 	export type SearchToolsInput = z.infer<typeof searchTools.input>;
 	export type SearchToolsOutput = z.infer<typeof searchTools.output>;
@@ -52,12 +52,12 @@ export namespace McpSwitchboardTools {
 	export const getToolInfo = {
 		input: z.object({
 			namespace: z.string(),
-			tool_name: z.string()
+			tool_name: z.string(),
 		}),
 		output: z.object({
 			namespace: z.string(),
-			tool: toolDetail
-		})
+			tool: toolDetail,
+		}),
 	};
 	export type GetToolInfoInput = z.infer<typeof getToolInfo.input>;
 	export type GetToolInfoOutput = z.infer<typeof getToolInfo.output>;
@@ -66,12 +66,12 @@ export namespace McpSwitchboardTools {
 		input: z.object({
 			namespace: z.string(),
 			tool_name: z.string(),
-			args: z.record(z.string(), z.unknown()).optional().default({})
+			args: z.record(z.string(), z.unknown()).optional().default({}),
 		}),
 		output: z.object({
 			content: z.array(z.record(z.string(), z.unknown())),
-			isError: z.boolean().optional()
-		})
+			isError: z.boolean().optional(),
+		}),
 	};
 	export type CallToolInput = z.infer<typeof callTool.input>;
 	export type CallToolOutput = z.infer<typeof callTool.output>;
@@ -86,32 +86,36 @@ export namespace McpSwitchboardTools {
 						.int()
 						.positive()
 						.optional()
-						.describe('Max characters of stdout to return. If exceeded, the output is clipped and "…" is appended.'),
+						.describe(
+							'Max characters of stdout to return. If exceeded, the output is clipped and "…" is appended.',
+						),
 					stderr: z
 						.number()
 						.int()
 						.positive()
 						.optional()
-						.describe('Max characters of stderr to return. If exceeded, the output is clipped and "…" is appended.'),
+						.describe(
+							'Max characters of stderr to return. If exceeded, the output is clipped and "…" is appended.',
+						),
 					result: z
 						.number()
 						.int()
 						.positive()
 						.optional()
 						.describe(
-							'Max characters of the JSON-stringified result to return. If exceeded, the output is clipped and "…" is appended.'
-						)
+							'Max characters of the JSON-stringified result to return. If exceeded, the output is clipped and "…" is appended.',
+						),
 				})
 				.describe(
-					'Optional per-field length limits. Any field that exceeds its limit is clipped and "…" is appended to signal truncation.'
+					'Optional per-field length limits. Any field that exceeds its limit is clipped and "…" is appended to signal truncation.',
 				)
-				.optional()
+				.optional(),
 		}),
 		output: z.object({
 			result: z.unknown(),
 			stdout: z.string(),
-			stderr: z.string()
-		})
+			stderr: z.string(),
+		}),
 	};
 	export type RunJsScriptInput = z.infer<typeof runJsScript.input>;
 	export type RunJsScriptOutput = z.infer<typeof runJsScript.output>;
@@ -140,7 +144,9 @@ export class McpSwitchboard extends SingletonBase {
 		this.servers.set(name, { client, tools });
 	}
 
-	list_tools({ namespace }: McpSwitchboardTools.ListToolsInput = {}): McpSwitchboardTools.ListToolsOutput {
+	list_tools({
+		namespace,
+	}: McpSwitchboardTools.ListToolsInput = {}): McpSwitchboardTools.ListToolsOutput {
 		const result: McpSwitchboardTools.ListToolsOutput = {};
 
 		for (const [ns, { tools }] of this.servers) {
@@ -148,16 +154,19 @@ export class McpSwitchboard extends SingletonBase {
 				continue;
 			}
 
-			result[ns] = tools.map((tool) => ({
+			result[ns] = tools.map(tool => ({
 				name: tool.name,
-				description: tool.description ?? ''
+				description: tool.description ?? '',
 			}));
 		}
 
 		return result;
 	}
 
-	search_tools({ query, max_results }: McpSwitchboardTools.SearchToolsInput): McpSwitchboardTools.SearchToolsOutput {
+	search_tools({
+		query,
+		max_results,
+	}: McpSwitchboardTools.SearchToolsInput): McpSwitchboardTools.SearchToolsOutput {
 		const candidates: McpSwitchboardTools.SearchToolsOutput = [];
 
 		for (const [ns, { tools }] of this.servers) {
@@ -166,17 +175,17 @@ export class McpSwitchboard extends SingletonBase {
 			}
 		}
 
-		const keys = candidates.map((c) => `${c.namespace}.${c.name}`);
+		const keys = candidates.map(c => `${c.namespace}.${c.name}`);
 		const matched = micromatch(keys, query);
 
 		if (max_results !== undefined && matched.length > max_results) {
 			throw new Error(
-				`Query "${query}" matched ${matched.length} tools, which exceeds max_results=${max_results}. Narrow your query.`
+				`Query "${query}" matched ${matched.length} tools, which exceeds max_results=${max_results}. Narrow your query.`,
 			);
 		}
 
 		const matchedSet = new Set(matched);
-		return candidates.filter((c) => matchedSet.has(`${c.namespace}.${c.name}`));
+		return candidates.filter(c => matchedSet.has(`${c.namespace}.${c.name}`));
 	}
 
 	async call_tool({ namespace, tool_name, args }: McpSwitchboardTools.CallToolInput) {
@@ -188,13 +197,16 @@ export class McpSwitchboard extends SingletonBase {
 		return server.client.callTool({ name: tool_name, arguments: args });
 	}
 
-	get_tool_info({ namespace, tool_name }: McpSwitchboardTools.GetToolInfoInput): McpSwitchboardTools.GetToolInfoOutput {
+	get_tool_info({
+		namespace,
+		tool_name,
+	}: McpSwitchboardTools.GetToolInfoInput): McpSwitchboardTools.GetToolInfoOutput {
 		const server = this.servers.get(namespace);
 		if (!server) {
 			throw new Error(`Namespace "${namespace}" not found`);
 		}
 
-		const tool = server.tools.find((t) => t.name === tool_name);
+		const tool = server.tools.find(t => t.name === tool_name);
 		if (!tool) {
 			throw new Error(`Tool "${tool_name}" not found in namespace "${namespace}"`);
 		}
@@ -202,12 +214,18 @@ export class McpSwitchboard extends SingletonBase {
 		return { namespace, tool };
 	}
 
-	async run_js_script({ script, maxLen }: McpSwitchboardTools.RunJsScriptInput): Promise<McpSwitchboardTools.RunJsScriptOutput> {
+	async run_js_script({
+		script,
+		maxLen,
+	}: McpSwitchboardTools.RunJsScriptInput): Promise<McpSwitchboardTools.RunJsScriptOutput> {
 		const src = script;
 		const stdout: string[] = [];
 		const stderr: string[] = [];
 
-		const toolsProxy: Record<string, Record<string, (args?: Record<string, unknown>) => Promise<unknown>>> = {};
+		const toolsProxy: Record<
+			string,
+			Record<string, (args?: Record<string, unknown>) => Promise<unknown>>
+		> = {};
 
 		for (const [ns, tools] of Object.entries(this.list_tools())) {
 			toolsProxy[ns] = {};
@@ -224,11 +242,11 @@ export class McpSwitchboard extends SingletonBase {
 			console: {
 				log: (...args: unknown[]) => stdout.push(args.map(String).join(' ')),
 				error: (...args: unknown[]) => stderr.push(args.map(String).join(' ')),
-				warn: (...args: unknown[]) => stderr.push(args.map(String).join(' '))
+				warn: (...args: unknown[]) => stderr.push(args.map(String).join(' ')),
 			},
 			Promise,
 			setTimeout,
-			clearTimeout
+			clearTimeout,
 		});
 
 		let result: unknown;
@@ -255,7 +273,7 @@ export class McpSwitchboard extends SingletonBase {
 		return {
 			result: resultValue,
 			stdout: stdoutStr,
-			stderr: stderrStr
+			stderr: stderrStr,
 		};
 	}
 }

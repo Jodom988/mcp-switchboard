@@ -1,35 +1,37 @@
 {
-  "name": "mcp-switchboard",
-  "version": "1.0.0",
-  "description": "A system for organizing and managing MCP (Model Context Protocol) Servers",
-  "main": "dist/daemon/index.js",
-  "scripts": {
-    "build": "node esbuild.config.js",
-    "start": "node dist/daemon/index.js",
-    "test": "vitest run"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Jodom988/mcp-switchboard.git"
-  },
-  "keywords": [],
-  "author": "Josh Majors",
-  "license": "ISC",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/Jodom988/mcp-switchboard/issues"
-  },
-  "homepage": "https://github.com/Jodom988/mcp-switchboard#readme",
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.28.0",
-    "micromatch": "^4.0.8",
-    "zod": "^4.3.6"
-  },
-  "devDependencies": {
-    "@types/micromatch": "^4.0.10",
-    "@types/node": "^25.5.0",
-    "esbuild": "^0.27.4",
-    "typescript": "^6.0.2",
-    "vitest": "^4.1.2"
-  }
+	"name": "mcp-switchboard",
+	"version": "1.0.0",
+	"description": "A system for organizing and managing MCP (Model Context Protocol) Servers",
+	"main": "dist/daemon/index.js",
+	"scripts": {
+		"build": "node esbuild.config.js",
+		"start": "node dist/daemon/index.js",
+		"verify": "vitest run && prettier --check --config ../.prettierrc.json .",
+		"test": "vitest run"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Jodom988/mcp-switchboard.git"
+	},
+	"keywords": [],
+	"author": "Josh Majors",
+	"license": "ISC",
+	"type": "module",
+	"bugs": {
+		"url": "https://github.com/Jodom988/mcp-switchboard/issues"
+	},
+	"homepage": "https://github.com/Jodom988/mcp-switchboard#readme",
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.28.0",
+		"micromatch": "^4.0.8",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@types/micromatch": "^4.0.10",
+		"@types/node": "^25.5.0",
+		"esbuild": "^0.27.4",
+		"prettier": "^3.8.1",
+		"typescript": "^6.0.2",
+		"vitest": "^4.1.2"
+	}
 }
