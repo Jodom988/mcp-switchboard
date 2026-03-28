@@ -1,4 +1,4 @@
-import { McpSwitchboardServer } from './mcpSwitchboardServer.js';
+import { McpSwitchboardServer } from './mcp-switchboard-server';
 
 const port = Number(process.env.PORT ?? '4000');
 

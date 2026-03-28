@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 
-import { McpSwitchboard, McpSwitchboardTools } from './mcpSwitchboard.js';
+import { McpSwitchboard, McpSwitchboardTools } from './mcp-switchboard';
 
 const sendJson = (res: ServerResponse, statusCode: number, body: unknown) => {
 	res.writeHead(statusCode, { 'content-type': 'application/json' });
