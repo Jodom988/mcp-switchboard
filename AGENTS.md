@@ -1,44 +1,42 @@
+# MCP-Switchboard
 
-This project creates an MCP management tool called "MCP-Switchboard". It allows users to specify a set of MCP servers, and combines the MCP servers under different namespaces. So the tools will be named as `<server-name>.<tool-name>`.
+MCP-Switchboard is a multiplexing MCP server. It connects to any number of upstream MCP servers and re-exposes their tools under namespaces, so the tools appear as `<server-name>.<tool-name>`. Rather than flooding the context window with every tool from every server, it provides discovery tools so an agent can find and call only what it needs.
 
-The MCP server does not just pass through the tools calls, it catalogues them so they're easily discoverable and don't cause context bloat. The MCP server exposes the following tools:
+## Repository layout
 
-### `list_tools`
+```
+mcpsb/          — the main package (the switchboard server)
+  src/
+    common/     — shared utilities (ServiceProvider DI engine)
+    daemon/     — the runnable server (entry point, services, switchboard logic)
+  esbuild.config.js
+test-harnesses/ — standalone scripts for manual end-to-end testing
+```
 
-Arguments:
+## Key concepts
 
-* `namespace` (optional): The namespace to list the tools from. If not provided, it will list all tools and their descriptions.
+**[ServiceProvider](mcpsb/src/common/service-provider.ts)** — a lightweight dependency injection container. Classes extend `SingletonBase` and receive a `ServiceProvider` in their constructor. Singletons are registered by class and resolved lazily.
 
-Returns: A list of tools with their descriptions, organized by namespace
+**[McpSwitchboard](mcpsb/src/daemon/mcp-switchboard.ts)** — the core logic. Maintains connections to upstream MCP servers and implements all discovery and call-through operations.
 
-### `search_tools`
+**[McpSwitchboardServer](mcpsb/src/daemon/mcp-switchboard-server.ts)** — wraps `McpSwitchboard` in an MCP-compliant HTTP server, registering each operation as an MCP tool.
 
-Arguments:
-* `query`: Glob pattern to search for a tool. Combines the namespace and tool name as one string to search against. For example, `myserver.*` would match all tools in the `myserver` namespace, while `*.toolname` would match all tools named `toolname` across all namespaces.
-* `max_results` (optional): The maximum number of results to return. If not provided, it will return all matching tools. If more tools match the query than the specified `max_results`, we will return an error indicating the query is too broad.
+## Build & verify
 
-Returns: A list of tools that match the search query, including their descriptions.
+```sh
+cd mcpsb
+npm run build    # compile with esbuild
+npm run verify   # run unit tests + prettier format check
+npm test         # unit tests only
+```
 
-### `get_tool_info`
+## Code style
 
-Arguments:
-* `namespace`: The namespace of the tool
-* `tool_name`: The name of the tool
-
-Returns: The description of the tool, including its arguments and return value
-
-### `call_tool`
-
-Arguments:
-* `namespace`: The namespace of the tool to call
-* `tool_name`: The name of the tool to call
-* `args`: The arguments to pass to the tool
-
-Returns: The result of the tool call
-
-### `run_js_script`
-
-Arguments:
-* `script`: The JavaScript code to execute. The JS environment will have access to the global object `tools`, which contains all the tools registered in the MCP server. Each tool can be called as a function, for example, `tools.myserver.mytool(arg1, arg2)`. The JS environment will also have access to a global `console` object for logging.
-
-Returns: The result of the script execution, as well as the stderr and stdout from the script execution. If the script errors, the error message will be printed to stderr.
+- **Formatter**: Prettier. Config at `.prettierrc.json` in the repo root. VS Code is configured to format on save.
+- **Tabs** for indentation, **single quotes** for strings, **no semicolons**, **LF** line endings, `printWidth` of 100.
+- Named functions use `function` declarations. Arrow functions are reserved for truly anonymous callbacks.
+- `if` statements always use `{ }` bodies, even for single-line branches.
+- Singleton fields resolved from a `ServiceProvider` are declared `private readonly`.
+- No `as` type casts — use type guards to narrow instead.
+- Test files are colocated with the file under test and named `<file>.spec.ts`.
+- Kebab case for new files if they have multiple words
