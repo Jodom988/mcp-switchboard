@@ -3,8 +3,8 @@
 	"tasks": [
 		{
 			"label": "build",
-			"type": "npm",
-			"script": "build",
+			"type": "shell",
+			"command": "npm run build",
 			"options": {
 				"cwd": "${workspaceFolder}/mcpsb"
 			},
@@ -19,9 +19,23 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "build test-harnesses",
+			"type": "shell",
+			"command": "npm run build",
+			"options": {
+				"cwd": "${workspaceFolder}/test-harnesses"
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
 			"label": "verify",
-			"type": "npm",
-			"script": "verify",
+			"type": "shell",
+			"command": "npm run verify",
 			"options": {
 				"cwd": "${workspaceFolder}/mcpsb"
 			},

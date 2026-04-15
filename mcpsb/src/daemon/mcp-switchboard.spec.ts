@@ -1,115 +1,16 @@
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import * as z from 'zod/v4';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { TestHttpMcp } from 'test-harnesses';
 import { ServiceProvider } from '../common/service-provider';
 import { McpSwitchboard } from './mcp-switchboard';
 
-function sendJson(res: ServerResponse, statusCode: number, body: unknown) {
-	res.writeHead(statusCode, { 'content-type': 'application/json' })
-	res.end(JSON.stringify(body))
-}
-
-function sendJsonRpcError(res: ServerResponse, statusCode: number, message: string) {
-	sendJson(res, statusCode, { jsonrpc: '2.0', error: { code: -32000, message }, id: null })
-}
-
-function createTestMcpServer() {
-	const server = new McpServer({ name: 'test-server', version: '1.0.0' });
-
-	server.registerTool(
-		'greet',
-		{
-			title: 'Greet',
-			description: 'Greet the caller by name.',
-			inputSchema: { name: z.string().describe('Name to greet') },
-			outputSchema: { greeting: z.string() },
-		},
-		async ({ name }) => ({
-			content: [{ type: 'text', text: `Hello, ${name}!` }],
-			structuredContent: { greeting: `Hello, ${name}!` },
-		}),
-	);
-
-	server.registerTool(
-		'add',
-		{
-			title: 'Add',
-			description: 'Add two numbers together.',
-			inputSchema: {
-				a: z.number().describe('First number'),
-				b: z.number().describe('Second number'),
-			},
-			outputSchema: { sum: z.number() },
-		},
-		async ({ a, b }) => ({
-			content: [{ type: 'text', text: `${a} + ${b} = ${a + b}` }],
-			structuredContent: { sum: a + b },
-		}),
-	);
-
-	return server
-}
-
-function startTestServer(): Promise<{ url: string; stop: () => Promise<void> }> {
-	return new Promise((resolve, reject) => {
-		const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-			const url = new URL(req.url ?? '/', `http://127.0.0.1`);
-
-			if (url.pathname !== '/mcp') {
-				sendJson(res, 404, { error: 'Not found' });
-				return;
-			}
-
-			if (req.method !== 'POST') {
-				sendJsonRpcError(res, 405, 'Method not allowed.');
-				return;
-			}
-
-			const server = createTestMcpServer();
-			const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-
-			try {
-				await server.connect(transport);
-				await transport.handleRequest(req, res);
-			} catch (err) {
-				if (!res.headersSent) {
-					sendJsonRpcError(res, 500, 'Internal server error')
-				}
-			} finally {
-				await transport.close();
-				await server.close();
-			}
-		});
-
-		httpServer.listen(0, '127.0.0.1', () => {
-			const address = httpServer.address();
-			if (typeof address !== 'object' || address === null) {
-				reject(new Error('Expected AddressInfo from server.address()'));
-				return;
-			}
-			resolve({
-				url: `http://127.0.0.1:${address.port}/mcp`,
-				stop: () => new Promise((res, rej) => httpServer.close(err => (err ? rej(err) : res()))),
-			});
-		});
-
-		httpServer.on('error', reject)
-	})
-}
-
-// --- Tests ---
-
 describe('McpSwitchboard', () => {
 	let switchboard: McpSwitchboard;
-	let stopServer: () => Promise<void>;
+	let server: TestHttpMcp;
 
 	beforeAll(async () => {
-		const { url, stop } = await startTestServer();
-		stopServer = stop;
+		server = new TestHttpMcp(0);
+		const url = await server.start();
 
 		const sp = new ServiceProvider();
 		sp.registerSingleton(McpSwitchboard);
@@ -118,7 +19,7 @@ describe('McpSwitchboard', () => {
 		await switchboard.addServer('test-server', url);
 	});
 
-	afterAll(() => stopServer());
+	afterAll(() => server.stop());
 
 	describe('list_tools', () => {
 		it('returns all tools grouped by namespace', () => {
@@ -196,7 +97,7 @@ describe('McpSwitchboard', () => {
 				tool_name: 'greet',
 				args: { name: 'World' },
 			});
-			expect(result.structuredContent).toEqual({ greeting: 'Hello, World!' });
+			expect(result.structuredContent).toEqual({ greeting: 'Hello, World from http-mcp!' });
 		});
 
 		it('throws for an unknown namespace', async () => {
