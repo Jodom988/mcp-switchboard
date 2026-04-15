@@ -26,7 +26,7 @@ export class McpSwitchboardServer extends SingletonBase {
 	}
 
 	async addServer(name: string, url: string): Promise<void> {
-		await this.switchboard.addServer(name, url);
+		await this.switchboard.addHttpServer(name, url);
 	}
 
 	private buildMcpServer(): McpServer {

@@ -1,7 +1,9 @@
 import vm from 'node:vm';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 import micromatch from 'micromatch';
 import * as z from 'zod/v4';
@@ -133,14 +135,20 @@ export class McpSwitchboard extends SingletonBase {
 		super(sp);
 	}
 
-	async addServer(name: string, url: string): Promise<void> {
-		const client = new Client({ name: `switchboard-client-${name}`, version: '1.0.0' });
+	public async addHttpServer(name: string, url: string): Promise<void> {
 		const transport = new StreamableHTTPClientTransport(new URL(url));
+		await this.connectServer(name, transport);
+	}
 
+	public async addCliServer(name: string, command: string, args?: string[]): Promise<void> {
+		const transport = new StdioClientTransport({ command, args });
+		await this.connectServer(name, transport);
+	}
+
+	private async connectServer(name: string, transport: Transport): Promise<void> {
+		const client = new Client({ name: `switchboard-client-${name}`, version: '1.0.0' });
 		await client.connect(transport);
-
 		const { tools } = await client.listTools();
-
 		this.servers.set(name, { client, tools });
 	}
 
