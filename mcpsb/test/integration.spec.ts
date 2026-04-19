@@ -115,30 +115,120 @@ for (const { label, setup, expectedGreeting } of transportConfigs) {
 			await runCli('stop');
 		}, 10_000);
 
-		it('lists the registered tools', async () => {
-			const result = await client.callTool({ name: 'list_tools', arguments: {} });
-			const tools = JSON.parse((result.content as { type: 'text'; text: string }[])[0].text);
-			expect(tools).toHaveProperty('test-server');
-			expect(tools['test-server'].map((t: { name: string }) => t.name)).toEqual(
-				expect.arrayContaining(['greet', 'add']),
-			);
+		describe('list_tools', () => {
+			it('returns all tools grouped by namespace', async () => {
+				const result = await client.callTool({ name: 'list_tools', arguments: {} });
+				const tools = JSON.parse((result.content as { type: 'text'; text: string }[])[0].text);
+				expect(tools).toHaveProperty('test-server');
+				expect(tools['test-server'].map((t: { name: string }) => t.name)).toEqual(
+					expect.arrayContaining(['greet', 'add']),
+				);
+			});
+
+			it('filters to a single namespace', async () => {
+				const result = await client.callTool({
+					name: 'list_tools',
+					arguments: { namespace: 'test-server' },
+				});
+				const tools = JSON.parse((result.content as { type: 'text'; text: string }[])[0].text);
+				expect(Object.keys(tools)).toEqual(['test-server']);
+			});
+
+			it('returns empty when namespace does not exist', async () => {
+				const result = await client.callTool({
+					name: 'list_tools',
+					arguments: { namespace: 'unknown' },
+				});
+				const tools = JSON.parse((result.content as { type: 'text'; text: string }[])[0].text);
+				expect(tools).toEqual({});
+			});
 		});
 
-		it('calls the greet tool', async () => {
-			const name = 'World';
-			const result = await client.callTool({
-				name: 'call_tool',
-				arguments: { namespace: 'test-server', tool_name: 'greet', args: { name } },
+		describe('search_tools', () => {
+			it('matches all tools in a namespace with wildcard', async () => {
+				const result = await client.callTool({
+					name: 'search_tools',
+					arguments: { query: 'test-server.*' },
+				});
+				const { results } = result.structuredContent as { results: { name: string }[] };
+				expect(results.map(t => t.name)).toEqual(expect.arrayContaining(['greet', 'add']));
 			});
-			expect(result.structuredContent).toEqual({ greeting: expectedGreeting(name) });
+
+			it('matches a specific tool across namespaces', async () => {
+				const result = await client.callTool({
+					name: 'search_tools',
+					arguments: { query: '*.add' },
+				});
+				const { results } = result.structuredContent as {
+					results: { namespace: string; name: string }[];
+				};
+				expect(results).toHaveLength(1);
+				expect(results[0]).toMatchObject({ namespace: 'test-server', name: 'add' });
+			});
 		});
 
-		it('calls the add tool', async () => {
-			const result = await client.callTool({
-				name: 'call_tool',
-				arguments: { namespace: 'test-server', tool_name: 'add', args: { a: 10, b: 32 } },
+		describe('get_tool_info', () => {
+			it('returns full tool details', async () => {
+				const result = await client.callTool({
+					name: 'get_tool_info',
+					arguments: { namespace: 'test-server', tool_name: 'greet' },
+				});
+				const info = result.structuredContent as {
+					namespace: string;
+					tool: { name: string; description: string };
+				};
+				expect(info.namespace).toBe('test-server');
+				expect(info.tool.name).toBe('greet');
+				expect(info.tool.description).toBe('Greet the caller by name.');
 			});
-			expect(result.structuredContent).toEqual({ sum: 42 });
+		});
+
+		describe('call_tool', () => {
+			it('calls the greet tool', async () => {
+				const name = 'World';
+				const result = await client.callTool({
+					name: 'call_tool',
+					arguments: { namespace: 'test-server', tool_name: 'greet', args: { name } },
+				});
+				expect(result.structuredContent).toEqual({ greeting: expectedGreeting(name) });
+			});
+
+			it('calls the add tool', async () => {
+				const result = await client.callTool({
+					name: 'call_tool',
+					arguments: { namespace: 'test-server', tool_name: 'add', args: { a: 10, b: 32 } },
+				});
+				expect(result.structuredContent).toEqual({ sum: 42 });
+			});
+		});
+
+		describe('run_js_script', () => {
+			it('executes a script and returns a result', async () => {
+				const result = await client.callTool({
+					name: 'run_js_script',
+					arguments: { script: `return await tools['test-server'].add({ a: 6, b: 7 })` },
+				});
+				const output = result.structuredContent as { result: unknown };
+				expect(output.result).toMatchObject({ sum: 13 });
+			});
+
+			it('captures console.log output in stdout', async () => {
+				const result = await client.callTool({
+					name: 'run_js_script',
+					arguments: { script: `console.log('hello from script')` },
+				});
+				const output = result.structuredContent as { stdout: string };
+				expect(output.stdout).toBe('hello from script');
+			});
+
+			it('captures thrown errors in stderr', async () => {
+				const result = await client.callTool({
+					name: 'run_js_script',
+					arguments: { script: `throw new Error('boom')` },
+				});
+				const output = result.structuredContent as { stderr: string };
+				expect(output.stderr).toMatch(/boom/);
+			});
 		});
 	});
 }
