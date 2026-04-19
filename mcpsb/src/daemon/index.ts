@@ -1,8 +1,9 @@
 import express from 'express';
 
-import { ApiPaths, MCP_PORT, type AddServerBody, type RemoveServerBody } from '../common/api';
+import { ApiPaths, DaemonDtos, MCP_PORT } from '../common/api';
 import { McpsbConfig } from '../common/config';
 import { ServiceProvider, SingletonBase } from '../common/service-provider';
+import { assertNever } from '../common/util/assert-never';
 import { McpSwitchboard } from './mcp-switchboard';
 import { McpSwitchboardServer } from './mcp-switchboard-server';
 import services from './services';
@@ -24,15 +25,25 @@ export class DaemonMain extends SingletonBase {
 		app.use(express.json());
 
 		app.post(ApiPaths.addServer, async (req, res) => {
-			const body = req.body as AddServerBody;
+			const parsed = DaemonDtos.AddServerBodySchema.safeParse(req.body);
+			if (!parsed.success) {
+				res.status(400).json({ ok: false, error: parsed.error.message });
+				return;
+			}
 			try {
-				if (body.type === 'http') {
-					await this.switchboard.addHttpServer(body.name, body.url);
-				} else if (body.type === 'cli') {
-					await this.switchboard.addCliServer(body.name, body.command, body.args);
-				} else {
-					res.status(400).json({ ok: false, error: 'Invalid type' });
-					return;
+				switch (parsed.data.type) {
+					case 'http':
+						await this.switchboard.addHttpServer(parsed.data.name, parsed.data.url);
+						break;
+					case 'cli':
+						await this.switchboard.addCliServer(
+							parsed.data.name,
+							parsed.data.command,
+							parsed.data.args,
+						);
+						break;
+					default:
+						assertNever(parsed.data);
 				}
 				res.json({ ok: true });
 			} catch (err) {
@@ -43,9 +54,13 @@ export class DaemonMain extends SingletonBase {
 		});
 
 		app.post(ApiPaths.removeServer, async (req, res) => {
-			const body = req.body as RemoveServerBody;
+			const parsed = DaemonDtos.RemoveServerBodySchema.safeParse(req.body);
+			if (!parsed.success) {
+				res.status(400).json({ ok: false, error: parsed.error.message });
+				return;
+			}
 			try {
-				await this.switchboard.removeServer(body.name);
+				await this.switchboard.removeServer(parsed.data.name);
 				res.json({ ok: true });
 			} catch (err) {
 				res

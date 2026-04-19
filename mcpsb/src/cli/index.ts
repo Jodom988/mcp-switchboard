@@ -3,12 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { Command } from 'commander';
 
-import {
-	ApiPaths,
-	type AddServerBody,
-	type ApiResponse,
-	type RemoveServerBody,
-} from '../common/api';
+import { ApiPaths, DaemonDtos } from '../common/api';
 import { McpsbConfig } from '../common/config';
 import { ServiceProvider, SingletonBase } from '../common/service-provider';
 import services from './services';
@@ -25,13 +20,13 @@ export class CliMain extends SingletonBase {
 		return `http://127.0.0.1:${this.config.daemonPort}`;
 	}
 
-	private async post(path: string, body: unknown): Promise<ApiResponse> {
+	private async post(path: string, body: unknown): Promise<DaemonDtos.ApiResponse> {
 		const res = await fetch(`${this.mgmtUrl}${path}`, {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify(body),
 		});
-		return res.json() as Promise<ApiResponse>;
+		return DaemonDtos.ApiResponseSchema.parse(await res.json());
 	}
 
 	public run(): void {
@@ -70,7 +65,7 @@ export class CliMain extends SingletonBase {
 					type: 'http',
 					name,
 					url,
-				} satisfies AddServerBody);
+				} satisfies DaemonDtos.AddServerBody);
 				console.log(result.ok ? `Server "${name}" added` : `Error: ${result.error}`);
 			});
 
@@ -83,7 +78,7 @@ export class CliMain extends SingletonBase {
 					name,
 					command,
 					args,
-				} satisfies AddServerBody);
+				} satisfies DaemonDtos.AddServerBody);
 				console.log(result.ok ? `Server "${name}" added` : `Error: ${result.error}`);
 			});
 
@@ -98,7 +93,7 @@ export class CliMain extends SingletonBase {
 				const result = await this.post(ApiPaths.removeServer, {
 					type: 'http',
 					name,
-				} satisfies RemoveServerBody);
+				} satisfies DaemonDtos.RemoveServerBody);
 				console.log(result.ok ? `Server "${name}" removed` : `Error: ${result.error}`);
 			});
 
@@ -109,7 +104,7 @@ export class CliMain extends SingletonBase {
 				const result = await this.post(ApiPaths.removeServer, {
 					type: 'cli',
 					name,
-				} satisfies RemoveServerBody);
+				} satisfies DaemonDtos.RemoveServerBody);
 				console.log(result.ok ? `Server "${name}" removed` : `Error: ${result.error}`);
 			});
 
