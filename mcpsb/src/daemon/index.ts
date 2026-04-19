@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { ApiPaths, DaemonDtos, MCP_PORT } from '../common/api';
+import { ApiPaths, DaemonDtos } from '../common/api';
 import { McpsbConfig } from '../common/config';
 import { ServiceProvider, SingletonBase } from '../common/service-provider';
 import { assertNever } from '../common/util/assert-never';
@@ -23,6 +23,10 @@ export class DaemonMain extends SingletonBase {
 	public async run(): Promise<void> {
 		const app = express();
 		app.use(express.json());
+
+		app.get(ApiPaths.ping, (_req, res) => {
+			res.json({ ok: true });
+		});
 
 		app.post(ApiPaths.addServer, async (req, res) => {
 			const parsed = DaemonDtos.AddServerBodySchema.safeParse(req.body);
@@ -74,12 +78,14 @@ export class DaemonMain extends SingletonBase {
 			process.exit(0);
 		});
 
-		app.listen(this.config.daemonPort, '127.0.0.1', () => {
-			console.log(`Management server listening on http://127.0.0.1:${this.config.daemonPort}`);
+		app.listen(this.config.savedConfig.daemonPort, '127.0.0.1', () => {
+			console.log(
+				`Management server listening on http://127.0.0.1:${this.config.savedConfig.daemonPort}`,
+			);
 		});
 
-		await this.mcpServer.start(MCP_PORT);
-		console.log(`MCP server listening on http://127.0.0.1:${MCP_PORT}/mcp`);
+		await this.mcpServer.start(this.config.savedConfig.mcpPort);
+		console.log(`MCP server listening on http://127.0.0.1:${this.config.savedConfig.mcpPort}/mcp`);
 	}
 }
 

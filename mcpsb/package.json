@@ -7,8 +7,9 @@
 		"build": "bun build src/daemon/index.ts src/cli/index.ts --outdir dist --target node --splitting",
 		"start": "bun dist/daemon/index.js",
 		"dev": "bun run src/daemon/index.ts",
-		"verify": "vitest run && prettier --check --config ../.prettierrc.json .",
-		"test": "vitest run"
+		"verify": "bun run test && bun run test:integration && prettier --check --config ../.prettierrc.json .",
+		"test": "vitest run src",
+		"test:integration": "vitest run test"
 	},
 	"repository": {
 		"type": "git",

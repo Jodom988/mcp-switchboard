@@ -8,7 +8,7 @@ import { McpSwitchboard } from './mcp-switchboard';
 interface TransportConfig {
 	label: string;
 	preTestSetup: (switchboard: McpSwitchboard) => Promise<() => Promise<void>>;
-	expectedGreeting: string;
+	expectedGreeting: (name: string) => string;
 }
 
 const cliMcpPath = fileURLToPath(
@@ -18,7 +18,7 @@ const cliMcpPath = fileURLToPath(
 const transportConfigs: TransportConfig[] = [
 	{
 		label: 'HTTP',
-		expectedGreeting: 'Hello, World from http-mcp!',
+		expectedGreeting: name => `Hello, ${name} from http-mcp!`,
 		preTestSetup: async switchboard => {
 			const server = new TestHttpMcp(0);
 			const url = await server.start();
@@ -28,7 +28,7 @@ const transportConfigs: TransportConfig[] = [
 	},
 	{
 		label: 'CLI',
-		expectedGreeting: 'Hello, World from cli-mcp!',
+		expectedGreeting: name => `Hello, ${name} from cli-mcp!`,
 		preTestSetup: async switchboard => {
 			await switchboard.addCliServer('test-server', 'node', [cliMcpPath]);
 			return async () => {};
@@ -121,12 +121,13 @@ for (const { label, preTestSetup, expectedGreeting } of transportConfigs) {
 			});
 
 			it('calls the greet tool and returns a greeting', async () => {
+				const name = 'World';
 				const result = await switchboard.call_tool({
 					namespace: 'test-server',
 					tool_name: 'greet',
-					args: { name: 'World' },
+					args: { name },
 				});
-				expect(result.structuredContent).toEqual({ greeting: expectedGreeting });
+				expect(result.structuredContent).toEqual({ greeting: expectedGreeting(name) });
 			});
 
 			it('throws for an unknown namespace', async () => {

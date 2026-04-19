@@ -9,7 +9,7 @@
 			"program": "${workspaceFolder}/mcpsb/src/daemon/index.ts",
 			"cwd": "${workspaceFolder}/mcpsb",
 			"env": {
-				"MCPSB_IS_PACKAGED": "false"
+				"MCPSB_CONFIG_PATH": "${workspaceFolder}/mcpsb/dev-config/config.json"
 			}
 		}
 	]

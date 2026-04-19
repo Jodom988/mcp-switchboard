@@ -17,7 +17,7 @@ export class CliMain extends SingletonBase {
 	}
 
 	private get mgmtUrl(): string {
-		return `http://127.0.0.1:${this.config.daemonPort}`;
+		return `http://127.0.0.1:${this.config.savedConfig.daemonPort}`;
 	}
 
 	private async post(path: string, body: unknown): Promise<DaemonDtos.ApiResponse> {

@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const MCP_PORT = 4000;
 
 export const ApiPaths = {
+	ping: '/ping',
 	stop: '/stop',
 	addServer: '/add-server',
 	removeServer: '/remove-server',

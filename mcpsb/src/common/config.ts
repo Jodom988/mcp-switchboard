@@ -10,24 +10,14 @@ const savedConfigSchema = z.object({
 type SavedConfig = z.infer<typeof savedConfigSchema>;
 
 export class McpsbConfig extends SingletonBase {
-	public get daemonPort(): number {
-		return this.savedConfig.daemonPort;
-	}
-
-	public readonly isPackaged: boolean;
 	public readonly savedConfig: SavedConfig;
 
 	public constructor(serviceProvider: ServiceProvider) {
 		super(serviceProvider);
 
-		this.isPackaged = this.readBoolEnvVar('MCPSB_IS_PACKAGED', true);
-
-		const configFilePath = (() => {
-			if (this.isPackaged) {
-				return `${process.env.HOME}/.mcpsb/config.json`;
-			}
-			return path.resolve(import.meta.dirname, '../../dev-config/config.json');
-		})();
+		const configFilePath =
+			this.readStrEnvVar('MCPSB_CONFIG_PATH') ??
+			path.join(process.env['HOME'] ?? '~', '.mcpsb', 'config.json');
 
 		try {
 			const raw = JSON.parse(fs.readFileSync(configFilePath, 'utf-8'));
@@ -40,21 +30,10 @@ export class McpsbConfig extends SingletonBase {
 			} catch {
 				console.log('Failed to create backup of old config file');
 			}
+			fs.mkdirSync(path.dirname(configFilePath), { recursive: true });
 			fs.writeFileSync(configFilePath, JSON.stringify(this.savedConfig, null, 2), 'utf-8');
 		}
-	}
-
-	private readBoolEnvVar(key: string, defaultValue: boolean): boolean;
-	private readBoolEnvVar(key: string, defaultValue?: undefined): boolean | undefined;
-	private readBoolEnvVar(key: string, defaultValue?: boolean): boolean | undefined {
-		const value = this.readStrEnvVar(key);
-		if (value === undefined) {
-			return defaultValue;
-		}
-		if (value.toLowerCase() === 'true' || value === '1') {
-			return true;
-		}
-		return false;
+		Object.freeze(this.savedConfig);
 	}
 
 	private readStrEnvVar(key: string, defaultValue?: string): string | undefined {
