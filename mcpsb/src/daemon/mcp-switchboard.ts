@@ -152,6 +152,15 @@ export class McpSwitchboard extends SingletonBase {
 		this.servers.set(name, { client, tools });
 	}
 
+	public async removeServer(name: string): Promise<void> {
+		const server = this.servers.get(name);
+		if (!server) {
+			throw new Error(`Namespace "${name}" not found`);
+		}
+		this.servers.delete(name);
+		await server.client.close();
+	}
+
 	list_tools({
 		namespace,
 	}: McpSwitchboardTools.ListToolsInput = {}): McpSwitchboardTools.ListToolsOutput {

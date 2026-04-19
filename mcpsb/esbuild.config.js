@@ -1,9 +1,12 @@
 import * as esbuild from 'esbuild';
 
 await esbuild.build({
-	entryPoints: ['src/daemon/index.ts'],
+	entryPoints: {
+		'daemon/index': 'src/daemon/index.ts',
+		'cli/index': 'src/cli/index.ts',
+	},
 	bundle: true,
 	platform: 'node',
 	format: 'esm',
-	outfile: 'dist/daemon/index.js',
+	outdir: 'dist',
 });
