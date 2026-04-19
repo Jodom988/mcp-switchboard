@@ -7,7 +7,7 @@ import { McpSwitchboard } from './mcp-switchboard';
 import { McpSwitchboardServer } from './mcp-switchboard-server';
 import services from './services';
 
-export class McpDaemonMain extends SingletonBase {
+export class DaemonMain extends SingletonBase {
 	private readonly config: McpsbConfig;
 	private readonly switchboard: McpSwitchboard;
 	private readonly mcpServer: McpSwitchboardServer;
@@ -69,8 +69,8 @@ export class McpDaemonMain extends SingletonBase {
 }
 
 (async () => {
-	services.registerSingleton(McpDaemonMain);
-	const main = services.resolveSingleton(McpDaemonMain);
+	services.registerSingleton(DaemonMain);
+	const main = services.resolveSingleton(DaemonMain);
 	try {
 		await main.run();
 	} catch (err) {
