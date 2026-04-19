@@ -34,7 +34,7 @@
 		"@types/micromatch": "^4.0.10",
 		"@types/node": "^25.5.0",
 		"prettier": "^3.8.1",
-		"test-harnesses": "file:../test-harnesses",
+		"test-servers": "file:../test-servers",
 		"typescript": "^6.0.2",
 		"vitest": "^4.1.2"
 	}

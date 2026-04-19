@@ -1,4 +1,4 @@
 {
-  "daemonPort": 9595,
-  "mcpPort": 9596
+	"daemonPort": 9595,
+	"mcpPort": 9596
 }

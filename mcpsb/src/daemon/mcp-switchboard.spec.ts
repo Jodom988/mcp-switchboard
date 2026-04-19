@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { TestHttpMcp } from 'test-harnesses';
+import { TestHttpMcp } from 'test-servers';
 import { ServiceProvider } from '../common/service-provider';
 import { McpSwitchboard } from './mcp-switchboard';
 
@@ -12,7 +12,7 @@ interface TransportConfig {
 }
 
 const cliMcpPath = fileURLToPath(
-	new URL('../../../test-harnesses/dist/test-cli-mcp.js', import.meta.url),
+	new URL('../../../test-servers/dist/test-cli-mcp.js', import.meta.url),
 );
 
 const transportConfigs: TransportConfig[] = [

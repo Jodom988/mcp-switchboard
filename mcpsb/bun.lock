@@ -16,7 +16,7 @@
         "@types/micromatch": "^4.0.10",
         "@types/node": "^25.5.0",
         "prettier": "^3.8.1",
-        "test-harnesses": "file:../test-harnesses",
+        "test-servers": "file:../test-servers",
         "typescript": "^6.0.2",
         "vitest": "^4.1.2",
       },
@@ -359,7 +359,7 @@
 
     "std-env": ["std-env@4.1.0", "", {}, "sha512-Rq7ybcX2RuC55r9oaPVEW7/xu3tj8u4GeBYHBWCychFtzMIr86A7e3PPEBPT37sHStKX3+TiX/Fr/ACmJLVlLQ=="],
 
-    "test-harnesses": ["test-harnesses@file:../test-harnesses", { "dependencies": { "@modelcontextprotocol/sdk": "^1.27.1", "zod": "^4.3.6" }, "devDependencies": { "@types/node": "^25.5.0", "typescript": "^5.9.3" } }],
+    "test-servers": ["test-servers@file:../test-servers", { "dependencies": { "@modelcontextprotocol/sdk": "^1.27.1", "zod": "^4.3.6" }, "devDependencies": { "@types/node": "^25.5.0", "typescript": "^5.9.3" } }],
 
     "tinybench": ["tinybench@2.9.0", "", {}, "sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg=="],
 
@@ -401,6 +401,6 @@
 
     "micromatch/picomatch": ["picomatch@2.3.2", "", {}, "sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA=="],
 
-    "test-harnesses/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+    "test-servers/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
   }
 }
