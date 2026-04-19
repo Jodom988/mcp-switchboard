@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const MCP_PORT = 4000;
-export const MGMT_PORT = 4001;
 
 export const ApiPaths = {
 	stop: '/stop',

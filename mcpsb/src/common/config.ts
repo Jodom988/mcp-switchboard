@@ -1,29 +1,46 @@
-import { readFileSync } from 'node:fs';
-
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { z } from 'zod';
 import { ServiceProvider, SingletonBase } from './service-provider';
 
+const savedConfigSchema = z.object({
+	daemonPort: z.number().default(9595),
+	mcpPort: z.number().default(9596),
+});
+type SavedConfig = z.infer<typeof savedConfigSchema>;
+
 export class McpsbConfig extends SingletonBase {
-	public readonly daemonPort: number;
+	public get daemonPort(): number {
+		return this.savedConfig.daemonPort;
+	}
+
 	public readonly isPackaged: boolean;
-	public readonly savedConfig: any;
+	public readonly savedConfig: SavedConfig;
 
 	public constructor(serviceProvider: ServiceProvider) {
 		super(serviceProvider);
 
-		this.daemonPort = this.readIntEnvVar('MCPSB_DAEMON_PORT', 9595);
 		this.isPackaged = this.readBoolEnvVar('MCPSB_IS_PACKAGED', true);
 
 		const configFilePath = (() => {
 			if (this.isPackaged) {
 				return `${process.env.HOME}/.mcpsb/config.json`;
 			}
-			return '../../config/config.json';
+			return path.resolve(import.meta.dirname, '../../dev-config/config.json');
 		})();
 
 		try {
-			this.savedConfig = JSON.parse(readFileSync(configFilePath, 'utf-8'));
-		} catch {
-			this.savedConfig = {};
+			const raw = JSON.parse(fs.readFileSync(configFilePath, 'utf-8'));
+			this.savedConfig = savedConfigSchema.parse(raw);
+		} catch (error) {
+			this.savedConfig = savedConfigSchema.parse({});
+			console.log(`Failed to read config file at ${configFilePath}, overwriting with defaults`);
+			try {
+				fs.renameSync(configFilePath, `${configFilePath}-${Date.now()}.old`);
+			} catch {
+				console.log('Failed to create backup of old config file');
+			}
+			fs.writeFileSync(configFilePath, JSON.stringify(this.savedConfig, null, 2), 'utf-8');
 		}
 	}
 
@@ -38,20 +55,6 @@ export class McpsbConfig extends SingletonBase {
 			return true;
 		}
 		return false;
-	}
-
-	private readIntEnvVar(key: string, defaultValue: number): number;
-	private readIntEnvVar(key: string, defaultValue?: undefined): number | undefined;
-	private readIntEnvVar(key: string, defaultValue?: number): number | undefined {
-		const value = this.readStrEnvVar(key);
-		if (value === undefined) {
-			return defaultValue;
-		}
-		const intValue = parseInt(value, 10);
-		if (isNaN(intValue)) {
-			throw new Error(`Environment variable ${key} must be a valid integer`);
-		}
-		return intValue;
 	}
 
 	private readStrEnvVar(key: string, defaultValue?: string): string | undefined {
