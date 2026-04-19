@@ -1,0 +1,13 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Debug Daemon",
+			"type": "bun",
+			"request": "launch",
+			"runtime": "${env:HOME}/.bun/bin/bun",
+			"program": "${workspaceFolder}/mcpsb/src/daemon/index.ts",
+			"cwd": "${workspaceFolder}/mcpsb"
+		}
+	]
+}

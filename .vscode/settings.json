@@ -6,5 +6,5 @@
 	"explorer.fileNesting.patterns": {
 		"*.ts": "${capture}.spec.ts"
 	},
-	"cSpell.words": ["mcpsb", "modelcontextprotocol", "Streamable"]
+	"cSpell.words": ["mcpsb", "MGMT", "modelcontextprotocol", "Streamable"]
 }
